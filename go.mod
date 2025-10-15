@@ -1,4 +1,4 @@
-module github.com/guestin/kboot/db
+module github.com/guestin/kboot-db-starter
 
 go 1.25
 
