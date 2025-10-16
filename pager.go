@@ -8,14 +8,7 @@ import (
 	"github.com/ooopSnake/assert.go"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
-	"gorm.io/gorm/schema"
 )
-
-type PageableTable interface {
-	schema.Tabler
-	OrderColMap() map[string]string
-	KeyFuzzyQueryCols() []string
-}
 
 type PageRequest struct {
 	Page     *int `json:"page" query:"page" form:"page" path:"page" form:"page" validate:"omitempty,gt=0"`
@@ -102,62 +95,62 @@ type (
 		resultConverter resultConverterFunc
 	}
 	resultConverterFunc func(src interface{}) interface{}
-	wrapOptionFunc      func(ctx *pageCtx)
+	pageOptionFunc      func(ctx *pageCtx)
 )
 
-func (f wrapOptionFunc) apply(ctx *pageCtx) {
+func (f pageOptionFunc) apply(ctx *pageCtx) {
 	f(ctx)
 }
 
 func WithBeginEndCol(col string) Option {
-	return wrapOptionFunc(func(ctx *pageCtx) {
+	return pageOptionFunc(func(ctx *pageCtx) {
 		ctx.beginEndCol = col
 	})
 }
 
 func WithKeyFuzzyCol(col string) Option {
-	return wrapOptionFunc(func(ctx *pageCtx) {
+	return pageOptionFunc(func(ctx *pageCtx) {
 		ctx.keyFuzzyCols = append(ctx.keyFuzzyCols, col)
 	})
 }
 
 func WithKeyFuzzyCols(all ...string) Option {
-	return wrapOptionFunc(func(ctx *pageCtx) {
+	return pageOptionFunc(func(ctx *pageCtx) {
 		ctx.keyFuzzyCols = all
 	})
 }
 
 func WithOrderCol(param, col string) Option {
-	return wrapOptionFunc(func(ctx *pageCtx) {
+	return pageOptionFunc(func(ctx *pageCtx) {
 		ctx.orderColsMap[param] = col
 	})
 }
 
 func WithOrderCols(all map[string]string) Option {
-	return wrapOptionFunc(func(ctx *pageCtx) {
+	return pageOptionFunc(func(ctx *pageCtx) {
 		ctx.orderColsMap = all
 	})
 }
 
 func WithWhere(query interface{}, args ...interface{}) Option {
-	return wrapOptionFunc(func(ctx *pageCtx) {
+	return pageOptionFunc(func(ctx *pageCtx) {
 		ctx.tx.Where(query, args...)
 	})
 }
 
 func WithOrder(order interface{}) Option {
-	return wrapOptionFunc(func(ctx *pageCtx) {
+	return pageOptionFunc(func(ctx *pageCtx) {
 		ctx.tx.Order(order)
 	})
 }
 
 func WithResultConverter(fn resultConverterFunc) Option {
-	return wrapOptionFunc(func(ctx *pageCtx) {
+	return pageOptionFunc(func(ctx *pageCtx) {
 		ctx.resultConverter = fn
 	})
 }
 
-func PageQuery[T any](tx *gorm.DB, page PageRequest, opts ...Option) (*PageResponse, error) {
+func PageQuery(tx *gorm.DB, page PageRequest, m interface{}, opts ...Option) (*PageResponse, error) {
 	assert.Must(tx != nil, "tx must not be nil").Panic()
 	ctx := &pageCtx{
 		tx:              tx,
@@ -165,12 +158,6 @@ func PageQuery[T any](tx *gorm.DB, page PageRequest, opts ...Option) (*PageRespo
 		keyFuzzyCols:    make([]string, 0),
 		orderColsMap:    make(map[string]string),
 		resultConverter: nil,
-	}
-	var m T
-	mType := reflect.TypeOf(m)
-	if mType.Kind() == reflect.Ptr {
-		mIns := reflect.New(mType.Elem()).Interface()
-		m = mIns.(T)
 	}
 	for _, opt := range opts {
 		if opt != nil {
@@ -203,7 +190,11 @@ func PageQuery[T any](tx *gorm.DB, page PageRequest, opts ...Option) (*PageRespo
 			ctx.tx = ctx.tx.Where(orQueryStr, args...)
 		}
 	}
-	dbResults := make([]T, 0)
+	mType := reflect.TypeOf(m)
+	if mType.Kind() != reflect.Ptr || mType.Elem().Kind() != reflect.Struct {
+		return nil, errors.Errorf("m must be a pointer to a struct")
+	}
+	dbResults := reflect.Zero(reflect.SliceOf(mType)).Interface()
 	total := int64(0)
 	err := ctx.tx.Offset(-1).
 		Model(m).
@@ -215,6 +206,7 @@ func PageQuery[T any](tx *gorm.DB, page PageRequest, opts ...Option) (*PageRespo
 	if err != nil {
 		return nil, err
 	}
+	dbResultsVal := reflect.ValueOf(dbResults)
 	resp := &PageResponse{
 		Total:    total,
 		Page:     page.PageV(),
@@ -223,8 +215,8 @@ func PageQuery[T any](tx *gorm.DB, page PageRequest, opts ...Option) (*PageRespo
 	}
 	if ctx.resultConverter != nil {
 		resultsCvt := make([]interface{}, 0)
-		for i := range dbResults {
-			resultsCvt = append(resultsCvt, ctx.resultConverter(dbResults[i]))
+		for i := range dbResultsVal.Len() {
+			resultsCvt = append(resultsCvt, ctx.resultConverter(dbResultsVal.Index(i).Interface()))
 		}
 		resp.Results = resultsCvt
 	} else {
