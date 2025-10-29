@@ -2,13 +2,13 @@ package db
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
 	"time"
 
 	"github.com/ooopSnake/assert.go"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 )
 
 type PageRequest struct {
@@ -151,7 +151,7 @@ func WithResultConverter(fn resultConverterFunc) Option {
 	})
 }
 
-func PageQuery(tx *gorm.DB, page PageRequest, m interface{}, opts ...Option) (*PageResponse, error) {
+func PageQuery[T schema.Tabler](tx *gorm.DB, page PageRequest, m T, opts ...Option) (*PageResponse, error) {
 	assert.Must(tx != nil, "tx must not be nil").Panic()
 	ctx := &pageCtx{
 		tx:              tx,
@@ -197,11 +197,13 @@ func PageQuery(tx *gorm.DB, page PageRequest, m interface{}, opts ...Option) (*P
 			ctx.tx = ctx.tx.Where(orQueryStr, args...)
 		}
 	}
-	mType := reflect.TypeOf(m)
-	if mType.Kind() != reflect.Ptr || mType.Elem().Kind() != reflect.Struct {
-		return nil, errors.Errorf("m must be a pointer to a struct")
-	}
-	dbResults := reflect.Zero(reflect.SliceOf(mType)).Interface()
+	//mType := reflect.TypeOf(m)
+	//if mType.Kind() != reflect.Ptr || mType.Elem().Kind() != reflect.Struct {
+	//	return nil, errors.Errorf("m must be a pointer to a struct")
+	//}
+	//dbResults := reflect.Zero(reflect.SliceOf(mType)).Interface()
+	dbResults := make([]T, 0)
+	//dbResults := make([]interface{}, 0)
 	total := int64(0)
 	err := ctx.tx.Offset(-1).
 		Model(m).
@@ -213,7 +215,7 @@ func PageQuery(tx *gorm.DB, page PageRequest, m interface{}, opts ...Option) (*P
 	if err != nil {
 		return nil, err
 	}
-	dbResultsVal := reflect.ValueOf(dbResults)
+	//dbResultsVal := reflect.ValueOf(dbResults)
 	resp := &PageResponse{
 		Total:    total,
 		Page:     page.PageV(),
@@ -222,8 +224,10 @@ func PageQuery(tx *gorm.DB, page PageRequest, m interface{}, opts ...Option) (*P
 	}
 	if ctx.resultConverter != nil {
 		resultsCvt := make([]interface{}, 0)
-		for i := range dbResultsVal.Len() {
-			resultsCvt = append(resultsCvt, ctx.resultConverter(dbResultsVal.Index(i).Interface()))
+		for i := range len(dbResults) {
+			//for i := range dbResultsVal.Len() {
+			//resultsCvt = append(resultsCvt, ctx.resultConverter(dbResultsVal.Index(i).Interface()))
+			resultsCvt = append(resultsCvt, ctx.resultConverter(dbResults[i]))
 		}
 		resp.Results = resultsCvt
 	} else {

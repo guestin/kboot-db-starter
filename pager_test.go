@@ -6,7 +6,24 @@ import (
 	"os"
 	"testing"
 	"time"
+
+	"gorm.io/gorm"
 )
+
+type User struct {
+	UuidPriWithCreateDelAtBase
+	Name string `gorm:"column:name"`
+	Age  int    `gorm:"column:age"`
+	Sex  string `gorm:"column:sex"`
+}
+
+func (*User) TableName() string {
+	return "t_users"
+}
+func (*User) AfterFind(session *gorm.DB) (err error) {
+	fmt.Println("AAA")
+	return nil
+}
 
 func TestPageQuery(t *testing.T) {
 	orm, err := newORM(context.Background(), Config{
@@ -21,12 +38,7 @@ func TestPageQuery(t *testing.T) {
 	defer func() {
 		_ = os.Remove("test.db")
 	}()
-	type User struct {
-		UuidPriWithCreateDelAtBase
-		Name string `gorm:"column:name"`
-		Age  int    `gorm:"column:age"`
-		Sex  string `gorm:"column:sex"`
-	}
+
 	err = orm.AutoMigrate(new(User))
 	if err != nil {
 		t.Fatalf("migrate err %v", err)
@@ -40,7 +52,7 @@ func TestPageQuery(t *testing.T) {
 	}
 	pageReq := PageRequest{}
 
-	res, err := PageQuery(orm, pageReq, new(User), WithResultConverter(func(src interface{}) interface{} {
+	res, err := PageQuery[*User](orm, pageReq, new(User), WithResultConverter(func(src interface{}) interface{} {
 		u := src.(*User)
 		t.Log("user ", u.Name)
 		return src
