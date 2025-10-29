@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/ooopSnake/assert.go"
 	"github.com/pkg/errors"
@@ -163,6 +164,12 @@ func PageQuery(tx *gorm.DB, page PageRequest, m interface{}, opts ...Option) (*P
 		if opt != nil {
 			opt.apply(ctx)
 		}
+	}
+	if page.BeginV() > 0 {
+		ctx.tx = ctx.tx.Where(fmt.Sprintf("%s >= ?", ctx.beginEndCol), time.Unix(page.BeginV(), 0))
+	}
+	if page.EndV() > 0 {
+		ctx.tx = ctx.tx.Where(fmt.Sprintf("%s <= ?", ctx.beginEndCol), time.Unix(page.EndV(), 0))
 	}
 	if len(page.OrderBy) > 0 {
 		//check order
