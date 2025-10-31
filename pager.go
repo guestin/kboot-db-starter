@@ -121,9 +121,13 @@ func WithKeyFuzzyCols(all ...string) Option {
 	})
 }
 
-func WithOrderCol(param, col string) Option {
+func WithOrderCol(param string, col ...string) Option {
 	return pageOptionFunc(func(ctx *pageCtx) {
-		ctx.orderColsMap[param] = col
+		if len(col) > 0 {
+			ctx.orderColsMap[param] = col[0]
+			return
+		}
+		ctx.orderColsMap[param] = param
 	})
 }
 
