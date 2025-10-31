@@ -22,7 +22,7 @@ type PageRequest struct {
 
 	OrderBy string `json:"orderBy" query:"orderBy" form:"orderBy" path:"orderBy" form:"orderBy"`
 
-	Order string `json:"order" query:"order" form:"order" path:"order" form:"order" validate:"omitempty,oneof=ASC DESC"`
+	Reserve bool `json:"reserve" query:"reserve" form:"reserve"`
 }
 
 func (this PageRequest) PageV() int {
@@ -54,8 +54,8 @@ func (this PageRequest) EndV() int64 {
 }
 
 func (this PageRequest) OrderV() string {
-	if this.Order != "" {
-		return this.Order
+	if this.Reserve {
+		return "DESC"
 	}
 	return "ASC"
 }
