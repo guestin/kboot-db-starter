@@ -140,7 +140,7 @@ func (l *traceLogger) Trace(ctx context.Context, begin time.Time, fc func() (str
 	}
 }
 
-func (l *traceLogger) ParamsFilter(ctx context.Context, sql string, params ...interface{}) (string, []interface{}) {
+func (l *traceLogger) ParamsFilter(_ context.Context, sql string, params ...interface{}) (string, []interface{}) {
 	if l.Config.ParameterizedQueries {
 		return sql, nil
 	}
@@ -199,9 +199,9 @@ func _traceSkip(ctx context.Context) int {
 func fileWithLineNum(ctx context.Context) string {
 	pcs := [13]uintptr{}
 	// the third caller usually from gorm internal
-	len := runtime.Callers(5+_traceSkip(ctx), pcs[:])
-	frames := runtime.CallersFrames(pcs[:len])
-	for i := 0; i < len; i++ {
+	l := runtime.Callers(5+_traceSkip(ctx), pcs[:])
+	frames := runtime.CallersFrames(pcs[:l])
+	for i := 0; i < l; i++ {
 		// second return value is "more", not "ok"
 		frame, _ := frames.Next()
 		if (!strings.HasPrefix(frame.File, "gormSourceDir") ||

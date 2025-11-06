@@ -20,7 +20,7 @@ type user struct {
 func (*user) TableName() string {
 	return "t_users"
 }
-func (*user) AfterFind(session *gorm.DB) (err error) {
+func (*user) AfterFind(_ *gorm.DB) (err error) {
 	fmt.Println("AAA")
 	return nil
 }
