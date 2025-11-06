@@ -4,7 +4,7 @@ go 1.25
 
 require (
 	github.com/guestin/kboot v0.1.0-beta.5
-	github.com/guestin/log v1.0.2
+	github.com/guestin/log v1.0.3
 	github.com/guestin/mob v1.1.1
 	github.com/ooopSnake/assert.go v1.0.1
 	github.com/pkg/errors v0.9.1
