@@ -20,13 +20,7 @@ func init() {
 }
 
 func sourceDir(file string) string {
-	dir := filepath.Dir(file)
-	dir = filepath.Dir(dir)
-
-	s := filepath.Dir(dir)
-	if filepath.Base(s) != "kboot-db-starter" {
-		s = dir
-	}
+	s := filepath.Dir(file)
 	return filepath.ToSlash(s) + "/"
 }
 

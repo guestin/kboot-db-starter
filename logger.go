@@ -204,7 +204,7 @@ func fileWithLineNum(ctx context.Context) string {
 	for i := 0; i < l; i++ {
 		// second return value is "more", not "ok"
 		frame, _ := frames.Next()
-		if (!strings.HasPrefix(frame.File, "gormSourceDir") ||
+		if (!strings.HasPrefix(frame.File, _sourceDir) ||
 			strings.HasSuffix(frame.File, "_test.go")) && !strings.HasSuffix(frame.File, ".gen.go") {
 			return string(strconv.AppendInt(append([]byte(frame.File), ':'), int64(frame.Line), 10))
 		}
