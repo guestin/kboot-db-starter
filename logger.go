@@ -149,28 +149,25 @@ func (l *traceLogger) ParamsFilter(_ context.Context, sql string, params ...inte
 
 func (l *traceLogger) Printf(ctx context.Context, lv gormLogger.LogLevel, s string, i ...interface{}) {
 	traceId := _traceId(ctx)
-	traceIdPrefix := ""
+	logger := l.zapLogger
 	if traceId != "" {
-		traceIdPrefix = fmt.Sprintf("[%s] ", traceId)
+		logger = logger.With(log.UseSubTag(log.NewFixStyleText(traceId, log.Blue, false)))
 	}
 	switch lv {
 	case gormLogger.Error:
 		lines := strings.Split(fmt.Sprintf(s, i...), "\n")
 		for _, line := range lines {
-			l.zapLogger.
-				Error(fmt.Sprintf("%s%s", traceIdPrefix, line))
+			logger.Error(line)
 		}
 	case gormLogger.Warn:
 		lines := strings.Split(fmt.Sprintf(s, i...), "\n")
 		for _, line := range lines {
-			l.zapLogger.
-				Warn(fmt.Sprintf("%s%s", traceIdPrefix, line))
+			logger.Warn(line)
 		}
 	case gormLogger.Info:
 		lines := strings.Split(fmt.Sprintf(s, i...), "\n")
 		for _, line := range lines {
-			l.zapLogger.
-				Info(fmt.Sprintf("%s%s", traceIdPrefix, line))
+			logger.Info(line)
 		}
 	default:
 		return
