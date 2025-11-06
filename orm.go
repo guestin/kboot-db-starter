@@ -34,7 +34,7 @@ func getDB(name string) *gorm.DB {
 		return _ormDB
 	}
 	ret, ok := _ormMaps.Load(strings.ToLower(name))
-	assert.Must(ok, fmt.Sprintf("no such db '%s' configured", name[0])).Panic()
+	assert.Must(ok, fmt.Sprintf("no such db '%s' configured", name)).Panic()
 	return ret.(*gorm.DB)
 }
 
