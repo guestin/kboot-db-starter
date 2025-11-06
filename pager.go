@@ -16,7 +16,7 @@ type PageRequest struct {
 	PageSize *int `json:"pageSize" query:"pageSize" form:"pageSize" path:"pageSize" form:"pageSize" validate:"omitempty,gt=0"`
 
 	Begin int64  `json:"begin" query:"begin" form:"begin" path:"begin" form:"begin" validate:"gte=0"`
-	End   *int64 `json:"end" query:"end" form:"end" path:"end" form:"end" validate:"omitempty,gtfield=Begin"`
+	End   *int64 `json:"end" query:"end" form:"end" path:"end" form:"end" validate:"omitempty,gtefield=Begin"`
 
 	Key string `json:"key" query:"key" form:"key" path:"key" form:"key"`
 
@@ -85,7 +85,7 @@ type PageResponse struct {
 }
 
 type (
-	Option interface {
+	PageOption interface {
 		apply(ctx *pageCtx)
 	}
 	pageCtx struct {
@@ -103,25 +103,25 @@ func (f pageOptionFunc) apply(ctx *pageCtx) {
 	f(ctx)
 }
 
-func WithBeginEndCol(col string) Option {
+func WithBeginEndCol(col string) PageOption {
 	return pageOptionFunc(func(ctx *pageCtx) {
 		ctx.beginEndCol = col
 	})
 }
 
-func WithKeyFuzzyCol(col string) Option {
+func WithKeyFuzzyCol(col string) PageOption {
 	return pageOptionFunc(func(ctx *pageCtx) {
 		ctx.keyFuzzyCols = append(ctx.keyFuzzyCols, col)
 	})
 }
 
-func WithKeyFuzzyCols(all ...string) Option {
+func WithKeyFuzzyCols(all ...string) PageOption {
 	return pageOptionFunc(func(ctx *pageCtx) {
 		ctx.keyFuzzyCols = all
 	})
 }
 
-func WithOrderCol(param string, col ...string) Option {
+func WithOrderCol(param string, col ...string) PageOption {
 	return pageOptionFunc(func(ctx *pageCtx) {
 		if len(col) > 0 {
 			ctx.orderColsMap[param] = col[0]
@@ -131,31 +131,31 @@ func WithOrderCol(param string, col ...string) Option {
 	})
 }
 
-func WithOrderCols(all map[string]string) Option {
+func WithOrderCols(all map[string]string) PageOption {
 	return pageOptionFunc(func(ctx *pageCtx) {
 		ctx.orderColsMap = all
 	})
 }
 
-func WithWhere(query interface{}, args ...interface{}) Option {
+func WithWhere(query interface{}, args ...interface{}) PageOption {
 	return pageOptionFunc(func(ctx *pageCtx) {
 		ctx.tx.Where(query, args...)
 	})
 }
 
-func WithOrder(order interface{}) Option {
+func WithOrder(order interface{}) PageOption {
 	return pageOptionFunc(func(ctx *pageCtx) {
 		ctx.tx.Order(order)
 	})
 }
 
-func WithResultConverter(fn resultConverterFunc) Option {
+func WithResultConverter(fn resultConverterFunc) PageOption {
 	return pageOptionFunc(func(ctx *pageCtx) {
 		ctx.resultConverter = fn
 	})
 }
 
-func PageQuery[T schema.Tabler](tx *gorm.DB, page PageRequest, m T, opts ...Option) (*PageResponse, error) {
+func PageQuery[T schema.Tabler](tx *gorm.DB, page PageRequest, m T, opts ...PageOption) (*PageResponse, error) {
 	assert.Must(tx != nil, "tx must not be nil").Panic()
 	ctx := &pageCtx{
 		tx:              tx,

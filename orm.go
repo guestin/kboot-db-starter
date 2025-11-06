@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/guestin/kboot"
 	"github.com/ooopSnake/assert.go"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -25,17 +26,37 @@ func SetupMigrateBuilder(migrator MigrateFunc) {
 	_migrator = migrator
 }
 
-// ORM get the orm instance of special name , empty name will get the default
-func ORM(name ...string) *gorm.DB {
-	if len(name) == 0 || name[0] == "" || strings.ToLower(name[0]) == cfgKeyDefault {
+func getDB(name string) *gorm.DB {
+	if name == "" || strings.ToLower(name) == cfgKeyDefault {
 		if _ormDB == nil {
 			assert.Must(true, "no default db configured").Panic()
 		}
 		return _ormDB
 	}
-	ret, ok := _ormMaps.Load(strings.ToLower(name[0]))
+	ret, ok := _ormMaps.Load(strings.ToLower(name))
 	assert.Must(ok, fmt.Sprintf("no such db '%s' configured", name[0])).Panic()
 	return ret.(*gorm.DB)
+}
+
+// ORM get the orm instance of special name , empty name will get the default
+func ORM(o ...Option) *gorm.DB {
+	ctx := &_ormCxt{
+		dbSelect:   "",
+		traceId:    "",
+		callerSkip: 0,
+	}
+	for _, opt := range o {
+		opt.apply(ctx)
+	}
+	ins := getDB(ctx.dbSelect)
+	insCtx := ins.Statement.Context
+	if ctx.traceId != "" {
+		insCtx = context.WithValue(insCtx, CtxTraceIdKey, ctx.traceId)
+	}
+	if ctx.callerSkip > 0 {
+		insCtx = context.WithValue(insCtx, CtxTraceSkipKey, ctx.callerSkip)
+	}
+	return ins.WithContext(insCtx)
 }
 
 func newORM(ctx context.Context, config Config, location *time.Location) (*gorm.DB, error) {
@@ -45,6 +66,7 @@ func newORM(ctx context.Context, config Config, location *time.Location) (*gorm.
 		NowFunc: func() time.Time {
 			return time.Now().In(location)
 		},
+		Logger: newTraceLogger(kboot.GetTaggedZapLogger(ModuleName), config),
 	}
 	switch config.Type {
 	case DsTypeSqlLite:

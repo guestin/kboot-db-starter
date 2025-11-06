@@ -29,10 +29,10 @@ github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX
 github.com/google/uuid v1.2.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/guestin/kboot v0.1.0-beta.1 h1:KccFrjGMpDqmn9MTXtXdqPq8suXlwis9CzBlXYG5AJs=
-github.com/guestin/kboot v0.1.0-beta.1/go.mod h1:hSHZoo9UrKZ3hjP0LZGe4IFGC1abo90GJ5XOV4ADjdM=
-github.com/guestin/log v1.0.1 h1:k0F+Cwx4zXDxxwGjQxAY9qtW+Wv4P0A8/T4qdzQcwfs=
-github.com/guestin/log v1.0.1/go.mod h1:wTf3/jPnIvOEuZ5n+FsoxYTThPe/FCu9Cwg5oPJ3BNw=
+github.com/guestin/kboot v0.1.0-beta.5 h1:UGTazSeMuuJhD2o+/UgkfR4sJwy8X3HhakYqDPDzybs=
+github.com/guestin/kboot v0.1.0-beta.5/go.mod h1:hSHZoo9UrKZ3hjP0LZGe4IFGC1abo90GJ5XOV4ADjdM=
+github.com/guestin/log v1.0.2 h1:TCZW9ua9ngwo0c4DEcY3KGwWSAp8oaxzeCPv9tuxgNM=
+github.com/guestin/log v1.0.2/go.mod h1:wTf3/jPnIvOEuZ5n+FsoxYTThPe/FCu9Cwg5oPJ3BNw=
 github.com/guestin/mob v1.1.1 h1:OyE8UBlxsOGnJXlLcetHoLHg5v7i5SitHSJ7Hg/dQLY=
 github.com/guestin/mob v1.1.1/go.mod h1:ebaN8Zzo941I8qwr/K5GodOB7ca1e1aRwyqMVNK6kuc=
 github.com/jackc/pgpassfile v1.0.0 h1:/6Hmqy13Ss2zCq62VdNG8tM1wchn8zjSGOBJ6icpsIM=

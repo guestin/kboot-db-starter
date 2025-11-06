@@ -10,28 +10,32 @@ import (
 	"gorm.io/gorm"
 )
 
-type User struct {
+type user struct {
 	UuidPriWithCreateDelAtBase
 	Name string `gorm:"column:name"`
 	Age  int    `gorm:"column:age"`
 	Sex  string `gorm:"column:sex"`
 }
 
-func (*User) TableName() string {
+func (*user) TableName() string {
 	return "t_users"
 }
-func (*User) AfterFind(session *gorm.DB) (err error) {
+func (*user) AfterFind(session *gorm.DB) (err error) {
 	fmt.Println("AAA")
 	return nil
 }
 
 func TestPageQuery(t *testing.T) {
-	orm, err := newORM(context.Background(), Config{
-		name:  "test",
-		Type:  DsTypeSqlLite,
-		DSN:   "test.db",
-		Debug: true,
-	}, time.Local)
+	cfg := Config{
+		name:     "test",
+		Type:     DsTypeSqlLite,
+		DSN:      "test.db",
+		Debug:    true,
+		Colorful: new(bool),
+	}
+	*cfg.Colorful = true
+	ctx := context.WithValue(context.WithValue(context.Background(), CtxTraceIdKey, "1111111"), CtxTraceSkipKey, 1)
+	orm, err := newORM(ctx, cfg, time.Local)
 	if err != nil {
 		t.Fatalf("new orm err %v", err)
 	}
@@ -39,12 +43,12 @@ func TestPageQuery(t *testing.T) {
 		_ = os.Remove("test.db")
 	}()
 
-	err = orm.AutoMigrate(new(User))
+	err = orm.AutoMigrate(new(user))
 	if err != nil {
 		t.Fatalf("migrate err %v", err)
 	}
 	for i := 0; i < 30; i++ {
-		orm.Create(&User{
+		orm.Create(&user{
 			Name: fmt.Sprintf("user%d", i),
 			Age:  18,
 			Sex:  "",
@@ -52,8 +56,8 @@ func TestPageQuery(t *testing.T) {
 	}
 	pageReq := PageRequest{}
 
-	res, err := PageQuery[*User](orm, pageReq, new(User), WithResultConverter(func(src interface{}) interface{} {
-		u := src.(*User)
+	res, err := PageQuery[*user](orm, pageReq, new(user), WithResultConverter(func(src interface{}) interface{} {
+		u := src.(*user)
 		t.Log("user ", u.Name)
 		return src
 	}))

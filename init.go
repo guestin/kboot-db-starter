@@ -2,22 +2,39 @@ package db
 
 import (
 	"fmt"
+	"path/filepath"
+	"runtime"
 
 	"github.com/guestin/kboot"
-	"github.com/guestin/log"
 	"github.com/guestin/mob/merrors"
+	"go.uber.org/zap"
+	gormLogger "gorm.io/gorm/logger"
 )
 
-var logger log.ClassicLog
-var zapLogger log.ZapLog
+var _sourceDir string
+
+func init() {
+	_, file, _, _ := runtime.Caller(0)
+	// compatible solution to get gorm source directory with various operating systems
+	_sourceDir = sourceDir(file)
+}
+
+func sourceDir(file string) string {
+	dir := filepath.Dir(file)
+	dir = filepath.Dir(dir)
+
+	s := filepath.Dir(dir)
+	if filepath.Base(s) != "kboot-db-starter" {
+		s = dir
+	}
+	return filepath.ToSlash(s) + "/"
+}
 
 func init() {
 	kboot.RegisterUnit(ModuleName, _init)
 }
 
 func _init(unit kboot.Unit) (kboot.ExecFunc, error) {
-	logger = kboot.GetTaggedLogger(ModuleName)
-	zapLogger = kboot.GetTaggedZapLogger(ModuleName)
 	cfgList, err := bindConfig()
 	timezone := kboot.GetContext().GetTimezone()
 	if err != nil {
@@ -26,6 +43,7 @@ func _init(unit kboot.Unit) (kboot.ExecFunc, error) {
 	if len(cfgList) == 0 {
 		return nil, merrors.Errorf("no valid db Config found")
 	}
+	gormLogger.Default = newTraceLogger(kboot.GetTaggedZapLogger(ModuleName), *cfgList[cfgKeyDefault])
 	for _, cfg := range cfgList {
 		ds := cfg.name
 		orm, err := newORM(unit.GetContext(), *cfg, timezone)
@@ -55,6 +73,7 @@ func bindConfig() (map[string]*Config, error) {
 		kboot.MustBindEnv(cfgKeyDbDebug),
 		kboot.MustBindEnv(cfgKeyDbType),
 		kboot.MustBindEnv(cfgKeyDbTimezone),
+		kboot.MustBindEnv(cfgKeyDbSlowThresholdMs),
 	)
 	if err != nil {
 		return nil, err
@@ -69,13 +88,14 @@ func bindConfig() (map[string]*Config, error) {
 			if exist {
 				return nil, merrors.Errorf("duplicate db setting : %s", key)
 			}
-			logger.Infof("try parser db settings '%s' ...", key)
+			kboot.GetTaggedZapLogger(ModuleName).Info("try parser db settings ...", zap.String("name", key))
 			var dsCfg = new(Config)
 			if err = kboot.UnmarshalSubConfig(fmt.Sprintf("%s.%s", ModuleName, key), dsCfg,
 				kboot.MustBindEnv(cfgKeyDbDsn),
 				kboot.MustBindEnv(cfgKeyDbDebug),
 				kboot.MustBindEnv(cfgKeyDbType),
 				kboot.MustBindEnv(cfgKeyDbTimezone),
+				kboot.MustBindEnv(cfgKeyDbSlowThresholdMs),
 			); err != nil {
 				return nil, err
 			}
