@@ -98,18 +98,20 @@ type Int64PriWithCreateAtBase struct {
 }
 
 func (this *Int64PriWithCreateAtBase) AfterFind(session *gorm.DB) (err error) {
+	_ = this.Int64PrimaryKey.AfterFind(session)
 	_ = this.CreatedAt.AfterFind(session)
 	return
 }
 
 // Int64PriWithCreateDelAtBase 自增主键 + CreatedAt + DeletedAt
 type Int64PriWithCreateDelAtBase struct {
-	UuidPrimaryKey
+	Int64PrimaryKey
 	CreatedAt
 	DeletedAt
 }
 
 func (this *Int64PriWithCreateDelAtBase) AfterFind(session *gorm.DB) (err error) {
+	_ = this.Int64PrimaryKey.AfterFind(session)
 	_ = this.CreatedAt.AfterFind(session)
 	_ = this.DeletedAt.AfterFind(session)
 	return
