@@ -115,9 +115,9 @@ func WithKeyFuzzyCol(col string) PageOption {
 	})
 }
 
-func WithKeyFuzzyCols(all ...string) PageOption {
+func WithKeyFuzzyCols(col ...string) PageOption {
 	return pageOptionFunc(func(ctx *pageCtx) {
-		ctx.keyFuzzyCols = all
+		ctx.keyFuzzyCols = append(ctx.keyFuzzyCols, col...)
 	})
 }
 
