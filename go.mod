@@ -3,7 +3,7 @@ module github.com/guestin/kboot-db-starter
 go 1.25
 
 require (
-	github.com/guestin/kboot v0.1.0-beta.7
+	github.com/guestin/kboot v0.1.0-beta.8
 	github.com/guestin/log v1.0.3
 	github.com/guestin/mob v1.1.2
 	github.com/ooopSnake/assert.go v1.0.1

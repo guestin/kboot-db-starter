@@ -139,13 +139,13 @@ func WithOrderCols(all map[string]string) PageOption {
 
 func WithWhere(query interface{}, args ...interface{}) PageOption {
 	return pageOptionFunc(func(ctx *pageCtx) {
-		ctx.tx.Where(query, args...)
+		ctx.tx = ctx.tx.Where(query, args...)
 	})
 }
 
 func WithOrder(order interface{}) PageOption {
 	return pageOptionFunc(func(ctx *pageCtx) {
-		ctx.tx.Order(order)
+		ctx.tx = ctx.tx.Order(order)
 	})
 }
 
