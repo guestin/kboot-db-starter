@@ -14,6 +14,11 @@ type CreatedAt struct {
 	CreatedAtTs int64     `gorm:"-" json:"createdAt"`
 }
 
+func (this *CreatedAt) AfterSave(*gorm.DB) (err error) {
+	this.CreatedAtTs = this.CreatedAt.Unix()
+	return
+}
+
 func (this *CreatedAt) AfterFind(*gorm.DB) (err error) {
 	this.CreatedAtTs = this.CreatedAt.Unix()
 	return
@@ -24,6 +29,11 @@ type UpdatedAt struct {
 	UpdatedAtTs int64     `gorm:"-" json:"updatedAt"`
 }
 
+func (this *UpdatedAt) AfterSave(*gorm.DB) (err error) {
+	this.UpdatedAtTs = this.UpdatedAt.Unix()
+	return
+}
+
 func (this *UpdatedAt) AfterFind(*gorm.DB) (err error) {
 	this.UpdatedAtTs = this.UpdatedAt.Unix()
 	return
@@ -32,6 +42,14 @@ func (this *UpdatedAt) AfterFind(*gorm.DB) (err error) {
 type DeletedAt struct {
 	DeletedAt   gorm.DeletedAt `gorm:"column:deleted_at" json:"-"`
 	DeletedAtTs *int64         `gorm:"-" json:"deletedAt,omitempty"`
+}
+
+func (this *DeletedAt) AfterSave(*gorm.DB) (err error) {
+	if this.DeletedAt.Valid {
+		this.DeletedAtTs = new(int64)
+		*this.DeletedAtTs = this.DeletedAt.Time.Unix()
+	}
+	return
 }
 
 func (this *DeletedAt) AfterFind(*gorm.DB) (err error) {
@@ -61,6 +79,11 @@ type Int64PrimaryKey struct {
 	IdStr string `gorm:"-" json:"id"`
 }
 
+func (this *Int64PrimaryKey) AfterSave(*gorm.DB) (err error) {
+	this.IdStr = fmt.Sprintf("%d", this.ID)
+	return
+}
+
 //goland:noinspection ALL
 func (this *Int64PrimaryKey) AfterFind(session *gorm.DB) (err error) {
 	this.IdStr = fmt.Sprintf("%d", this.ID)
@@ -71,6 +94,11 @@ func (this *Int64PrimaryKey) AfterFind(session *gorm.DB) (err error) {
 type UuidPriWithCreateAtBase struct {
 	UuidPrimaryKey
 	CreatedAt
+}
+
+func (this *UuidPriWithCreateAtBase) AfterSave(session *gorm.DB) (err error) {
+	_ = this.CreatedAt.AfterSave(session)
+	return
 }
 
 func (this *UuidPriWithCreateAtBase) AfterFind(session *gorm.DB) (err error) {
@@ -85,6 +113,12 @@ type UuidPriWithCreateDelAtBase struct {
 	DeletedAt
 }
 
+func (this *UuidPriWithCreateDelAtBase) AfterSave(session *gorm.DB) (err error) {
+	_ = this.CreatedAt.AfterSave(session)
+	_ = this.DeletedAt.AfterSave(session)
+	return
+}
+
 func (this *UuidPriWithCreateDelAtBase) AfterFind(session *gorm.DB) (err error) {
 	_ = this.CreatedAt.AfterFind(session)
 	_ = this.DeletedAt.AfterFind(session)
@@ -95,6 +129,12 @@ func (this *UuidPriWithCreateDelAtBase) AfterFind(session *gorm.DB) (err error) 
 type Int64PriWithCreateAtBase struct {
 	Int64PrimaryKey
 	CreatedAt
+}
+
+func (this *Int64PriWithCreateAtBase) AfterSave(session *gorm.DB) (err error) {
+	_ = this.Int64PrimaryKey.AfterSave(session)
+	_ = this.CreatedAt.AfterSave(session)
+	return
 }
 
 func (this *Int64PriWithCreateAtBase) AfterFind(session *gorm.DB) (err error) {
@@ -108,6 +148,13 @@ type Int64PriWithCreateDelAtBase struct {
 	Int64PrimaryKey
 	CreatedAt
 	DeletedAt
+}
+
+func (this *Int64PriWithCreateDelAtBase) AfterSave(session *gorm.DB) (err error) {
+	_ = this.Int64PrimaryKey.AfterSave(session)
+	_ = this.CreatedAt.AfterSave(session)
+	_ = this.DeletedAt.AfterSave(session)
+	return
 }
 
 func (this *Int64PriWithCreateDelAtBase) AfterFind(session *gorm.DB) (err error) {
