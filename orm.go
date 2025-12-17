@@ -59,6 +59,26 @@ func ORM(o ...Option) *gorm.DB {
 	return ins.WithContext(insCtx)
 }
 
+// Wrap an existing gorm.DB with options like traceId , callerSkip
+func Wrap(orm *gorm.DB, o ...Option) *gorm.DB {
+	ctx := &_ormCxt{
+		dbSelect:   "",
+		traceId:    "",
+		callerSkip: 0,
+	}
+	for _, opt := range o {
+		opt.apply(ctx)
+	}
+	insCtx := orm.Statement.Context
+	if ctx.traceId != "" {
+		insCtx = context.WithValue(insCtx, CtxTraceIdKey, ctx.traceId)
+	}
+	if ctx.callerSkip > 0 {
+		insCtx = context.WithValue(insCtx, CtxTraceSkipKey, ctx.callerSkip)
+	}
+	return orm.WithContext(insCtx)
+}
+
 func newORM(ctx context.Context, config Config, location *time.Location) (*gorm.DB, error) {
 	var dbDialer func(dsn string) gorm.Dialector
 	dbConfig := &gorm.Config{
