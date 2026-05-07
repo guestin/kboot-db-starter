@@ -86,7 +86,8 @@ func newORM(ctx context.Context, config Config, location *time.Location) (*gorm.
 		NowFunc: func() time.Time {
 			return time.Now().In(location)
 		},
-		Logger: newTraceLogger(kboot.GetTaggedZapLogger(ModuleName), config),
+		Logger:         newTraceLogger(kboot.GetTaggedZapLogger(ModuleName), config),
+		TranslateError: true,
 	}
 	switch config.Type {
 	case DsTypeSqlLite:
